@@ -86,6 +86,19 @@ async def curso_aluno_por_id(id:int,db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Curso_Aluno não existe")
     else:
         return curso_aluno
+
+@router.post("/curso_aluno")
+async def criar_curso_aluno(curso_aluno: Curso_Aluno, db: Session = Depends(get_db)):
+    novo_curso_aluno = Curso_Aluno(**curso_aluno.model_dump())
+    try:
+        db.add(novo_curso_aluno)
+        db.commit()
+        db.refresh(novo_curso_aluno)
+        return { "mensagem": "Professor criado com sucesso",
+                 "curso_aluno": novo_curso_aluno}
+    except Exception as e:
+        return { "mensagem": "Problemas para inserir o curso_aluno",
+                 "curso_aluno": novo_curso_aluno}
         
 @router.delete("/curso_aluno/{id}")
 def delete(id: int, db: Session = Depends(get_db)):
