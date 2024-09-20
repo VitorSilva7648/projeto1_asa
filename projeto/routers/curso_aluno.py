@@ -80,16 +80,13 @@ def update_curso_aluno(curso_idcurso: int, aluno_idaluno: int, curso_aluno: Curs
 
 ###
 @router.get("/curso_aluno/{id}")
-def delete(id: int, db: Session = Depends(get_db)):
-    delete_post = db.query(Curso_Aluno).filter(Curso_Aluno.id == id).first()  # .first() precisa ser adicionado
-    
-    if delete_post is None:
+async def curso_aluno_por_id(id:int,db: Session = Depends(get_db)):
+    curso_aluno=db.query(Curso_Aluno).filter(Curso_Aluno.id==id).first()
+    if(curso_aluno==None):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Curso_Aluno não existe")
     else:
-        db.delete(delete_post)  # Correção para deletar o objeto diretamente
-        db.commit()
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
+        return curso_aluno
+        
 @router.delete("/curso_aluno/{id}")
 def delete(id: int, db: Session = Depends(get_db)):
     delete_post = db.query(Curso_Aluno).filter(Curso_Aluno.id == id).first()  # .first() precisa ser adicionado
