@@ -78,7 +78,6 @@ def update_curso_aluno(curso_idcurso: int, aluno_idaluno: int, curso_aluno: Curs
     
     return {"mensagem": "Curso-Aluno atualizado com sucesso", "curso_aluno": curso_aluno_db}
 
-###
 @router.get("/curso_aluno/{id}")
 def delete(id: int, db: Session = Depends(get_db)):
     delete_post = db.query(Curso_Aluno).filter(Curso_Aluno.id == id).first()  # .first() precisa ser adicionado

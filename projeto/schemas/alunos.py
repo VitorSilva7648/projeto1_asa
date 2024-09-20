@@ -2,11 +2,11 @@ from pydantic import BaseModel
 
 class Aluno(BaseModel):
     nome: str
-    idade: int
     email: str
-    curso: str
-    periodo: int
+    cpf: int
+    endereco: str 
+    numero: int 
+    complemento: str
     cidade: str
     estado: str
-    pais: str
-    turma_id: int
+    

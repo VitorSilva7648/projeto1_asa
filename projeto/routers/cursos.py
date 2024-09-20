@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from schemas.curso import Curso
 from models.database import get_db
-from models.curso import Cursos
+from models.curso import Curso as Cursos
 from sqlalchemy.orm import Session
 import logging
 
@@ -9,16 +9,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 router = APIRouter()
 
-@router.get("/curso")
-def get(db: Session = Depends(get_db)):
-    all_cursos = db.query(Cursos).all()  # Usar o modelo correto
-    logging.info("GET_ALL_CURSOS")
-    cursos = []
-    for curso in all_cursos:
-        item = {"id": curso.id, "nome": curso.nome}
-        cursos.append(item)       
-    logging.info(cursos)
-    return cursos  # Corrigir o retorno para devolver a lista gerada
+@router.get("/cursos")
+def todos_cursos(db: Session = Depends(get_db)):
+    all_cursos = db.query(Cursos).all()
+    return all_cursos
 
 
 @router.post("/cursos")
@@ -49,11 +43,12 @@ def delete(id: int, db: Session = Depends(get_db)):
 
 @router.put("/cursos/{id}")
 def update(id: int, curso: Curso, db: Session = Depends(get_db)):
-    updated_post = db.query(Cursos).filter(Cursos.id == id).first()  # Obter o primeiro resultado
+    updated_post = db.query(Cursos).filter(Cursos.id == id)
+    updated_post.first()  # Obter o primeiro resultado
     
-    if updated_post is None:
+    if updated_post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Curso: {id} não existe")
     else:
-        updated_post.update(curso.model_dump())  # Atualizar diretamente o objeto
+        updated_post.update(curso.model_dump(), synchronize_session=False)  # Atualizar diretamente o objeto
         db.commit()
-    return updated_post
+    return updated_post.first()
