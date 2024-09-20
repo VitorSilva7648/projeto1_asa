@@ -94,7 +94,7 @@ async def criar_curso_aluno(curso_aluno: Curso_Aluno, db: Session = Depends(get_
         db.add(novo_curso_aluno)
         db.commit()
         db.refresh(novo_curso_aluno)
-        return { "mensagem": "Professor criado com sucesso",
+        return { "mensagem": "curso_aluno criado com sucesso",
                  "curso_aluno": novo_curso_aluno}
     except Exception as e:
         return { "mensagem": "Problemas para inserir o curso_aluno",
