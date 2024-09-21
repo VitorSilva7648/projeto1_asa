@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from schemas.curso_aluno import Curso_Aluno
 from models.curso_aluno import Curso_Aluno as Curso_Aluno_Model  # Importando corretamente o modelo SQLAlchemy
 from models.database import get_db
@@ -23,16 +23,6 @@ def get_all_curso_aluno(db: Session = Depends(get_db)):
         curso_alunos.append(aluno)
     return curso_alunos
 
-# Get a specific course-student relationship
-@router.get("/curso_aluno/{curso_idcurso}/{aluno_idaluno}")
-def get_curso_aluno(curso_idcurso: int, aluno_idaluno: int, db: Session = Depends(get_db)):
-    curso_aluno = db.query(Curso_Aluno_Model).filter_by(curso_idcurso=curso_idcurso, aluno_idaluno=aluno_idaluno).first()
-    
-    if not curso_aluno:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relação curso-aluno não encontrada")
-    
-    return curso_aluno
-
 # Create a new course-student relationship
 @router.post("/curso_aluno")
 async def criar_curso_aluno(curso_aluno: Curso_Aluno, db: Session = Depends(get_db)):
@@ -47,62 +37,23 @@ async def criar_curso_aluno(curso_aluno: Curso_Aluno, db: Session = Depends(get_
         db.rollback()  # Reverter caso haja um erro
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Problemas ao criar curso-aluno")
 
-# Delete a course-student relationship
-@router.delete("/curso_aluno/{curso_idcurso}/{aluno_idaluno}")
-def delete_curso_aluno(curso_idcurso: int, aluno_idaluno: int, db: Session = Depends(get_db)):
-    curso_aluno = db.query(Curso_Aluno_Model).filter_by(curso_idcurso=curso_idcurso, aluno_idaluno=aluno_idaluno).first()
-    
-    if not curso_aluno:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relação curso-aluno não encontrada")
-    
-    db.delete(curso_aluno)
-    db.commit()
-    logging.info(f"Curso-Aluno deletado: Curso {curso_idcurso}, Aluno {aluno_idaluno}")
-    
-    return {"mensagem": "Curso-Aluno deletado com sucesso"}
-
-# Update a course-student relationship
-@router.put("/curso_aluno/{curso_idcurso}/{aluno_idaluno}")
-def update_curso_aluno(curso_idcurso: int, aluno_idaluno: int, curso_aluno: Curso_Aluno, db: Session = Depends(get_db)):
-    curso_aluno_db = db.query(Curso_Aluno_Model).filter_by(curso_idcurso=curso_idcurso, aluno_idaluno=aluno_idaluno).first()
-    
-    if not curso_aluno_db:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Relação curso-aluno não encontrada")
-    
-    # Atualiza o relacionamento
-    for key, value in curso_aluno.dict().items():
-        setattr(curso_aluno_db, key, value)
-    
-    db.commit()
-    logging.info(f"Curso-Aluno atualizado: Curso {curso_idcurso}, Aluno {aluno_idaluno}")
-    
-    return {"mensagem": "Curso-Aluno atualizado com sucesso", "curso_aluno": curso_aluno_db}
 
 ###
 @router.get("/curso_aluno/{id}")
-async def curso_aluno_por_id(id:int,db: Session = Depends(get_db)):
-    curso_aluno=db.query(Curso_Aluno).filter(Curso_Aluno.id==id).first()
+def get(id:int,db: Session = Depends(get_db)):
+    curso_aluno=db.query(Curso_Aluno_Model).filter(Curso_Aluno_Model.id==id).first()
+    curso=db.query(Curso).filter(Curso.id==curso_aluno.id_curso).first()
+    aluno=db.query(Aluno).filter(Aluno.id==curso_aluno.id_aluno).first()
+    
     if(curso_aluno==None):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Curso_Aluno não existe")
     else:
-        return curso_aluno
-
-@router.post("/curso_aluno")
-async def criar_curso_aluno(curso_aluno: Curso_Aluno, db: Session = Depends(get_db)):
-    novo_curso_aluno = Curso_Aluno(**curso_aluno.model_dump())
-    try:
-        db.add(novo_curso_aluno)
-        db.commit()
-        db.refresh(novo_curso_aluno)
-        return { "mensagem": "curso_aluno criado com sucesso",
-                 "curso_aluno": novo_curso_aluno}
-    except Exception as e:
-        return { "mensagem": "Problemas para inserir o curso_aluno",
-                 "curso_aluno": novo_curso_aluno}
+        lista=[curso_aluno,curso,aluno]
+        return lista
         
 @router.delete("/curso_aluno/{id}")
 def delete(id: int, db: Session = Depends(get_db)):
-    delete_post = db.query(Curso_Aluno).filter(Curso_Aluno.id == id).first()  # .first() precisa ser adicionado
+    delete_post = db.query(Curso_Aluno_Model).filter(Curso_Aluno_Model.id == id).first()  # .first() precisa ser adicionado
     
     if delete_post is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Curso_Aluno não existe")
@@ -114,7 +65,7 @@ def delete(id: int, db: Session = Depends(get_db)):
 
 @router.put("/curso_aluno/{id}")
 def update(id: int, curso: Curso_Aluno, db: Session = Depends(get_db)):
-    updated_post = db.query(Curso_Aluno).filter(Curso_Aluno.id == id)
+    updated_post = db.query(Curso_Aluno_Model).filter(Curso_Aluno_Model.id == id)
     updated_post.first()  # Obter o primeiro resultado
     
     if updated_post == None:
